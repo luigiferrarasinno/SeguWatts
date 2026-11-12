@@ -1,0 +1,552 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "06d2ba33-48b3-466a-8058-b7632bccdfa4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "## simulação da entrada de energia \n\n",
+        "height": 352,
+        "width": 836
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "061fab0d-8d4a-45c6-908c-c6b878bfdf77",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "71c5357f-e53d-4bb7-9c48-22b95eda6519",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "return Array.from({ length: 60 }, (_, i) => ({\n  json: {\n    nome: i + 1\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d522a16c-94d6-41b5-8614-09bf5f36af19",
+      "name": "representação do tempo , uma hora com 60 minutos"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst equipamentos = [\n  { nome: \"Geladeira\", min: 80, max: 400, chance: 100 },\n  { nome: \"Microondas\", min: 800, max: 1500, chance: 15 },\n  { nome: \"Ar_condicionado\", min: 700, max: 2200, chance: 45 },\n  { nome: \"Televisao\", min: 50, max: 200, chance: 65 },\n  { nome: \"Chuveiro_Eletrico\", min: 3500, max: 7500, chance: 20 },\n  { nome: \"Maquina_de_Lavar\", min: 400, max: 1500, chance: 20 },\n  { nome: \"Computador\", min: 100, max: 500, chance: 50 },\n  { nome: \"Notebook\", min: 40, max: 120, chance: 40 },\n  { nome: \"Ventilador\", min: 50, max: 150, chance: 50 },\n  { nome: \"Lampadas\", min: 10, max: 100, chance: 80 },\n  { nome: \"Ferro_de_Passar\", min: 1000, max: 2000, chance: 10 },\n  { nome: \"Air_Fryer\", min: 1200, max: 2000, chance: 15 },\n  { nome: \"Forno_Eletrico\", min: 1000, max: 2500, chance: 10 },\n  { nome: \"Roteador\", min: 5, max: 25, chance: 100 },\n  { nome: \"Secador_de_Cabelo\", min: 1000, max: 2200, chance: 5 }\n];\n\nfunction gerarNumero(min, max) {\n  return Math.floor(Math.random() * (max - min + 1)) + min;\n}\n\nconst resultado = {};\n\nequipamentos.forEach(eq => {\n  const ligado = Math.random() * 100 < eq.chance;\n\n  resultado[eq.nome] = ligado\n    ? gerarNumero(eq.min, eq.max)\n    : 0;\n});\n\nreturn [\n  {\n    json: resultado\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        64
+      ],
+      "id": "16ec4f3b-a486-4f0c-8440-195d6508b5b5",
+      "name": "simulação de geração de dados"
+    },
+    {
+      "parameters": {
+        "content": "## analise e armazenamento de dados\n",
+        "height": 352,
+        "width": 740,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        816,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "495001b5-9975-4441-a9ef-46560acc6dad",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst totalItems = items.length;\n\nif (totalItems === 0) {\n  return [];\n}\n\n// Soma os valores de cada equipamento\nconst somas = {};\n\nfor (const item of items) {\n  const dados = item.json;\n\n  for (const [equipamento, valor] of Object.entries(dados)) {\n    somas[equipamento] = (somas[equipamento] || 0) + (Number(valor) || 0);\n  }\n}\n\n// Calcula a média de cada equipamento\nconst medias = {};\n\nfor (const [equipamento, soma] of Object.entries(somas)) {\n  medias[equipamento] = Number((soma / totalItems).toFixed(2));\n}\n\n// Retorna um único JSON com todas as médias\nreturn [\n  {\n    json: {\n      total_analisado: totalItems,\n      medias\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        -16
+      ],
+      "id": "ca4467e6-6f8b-4b56-a53d-25ab442d12ae",
+      "name": "pega a media de energia gasta em cada aparelho ao longo de uma hora"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\n// Potência de referência de cada aparelho (Watts)\nconst referencias = {\n  Geladeira: 150,\n  Microondas: 1000,\n  Ar_condicionado: 1000,\n  Televisao: 100,\n  Chuveiro_Eletrico: 5000,\n  Maquina_de_Lavar: 800,\n  Computador: 200,\n  Notebook: 60,\n  Ventilador: 80,\n  Lampadas: 15,\n  Ferro_de_Passar: 1200,\n  Air_Fryer: 1400,\n  Forno_Eletrico: 1500,\n  Roteador: 15,\n  Secador_de_Cabelo: 1500\n};\n\nconst resultados = [];\n\nfor (const item of items) {\n  const dados = item.json.medias;\n\n  for (const [aparelho, consumo] of Object.entries(dados)) {\n\n    const referencia = referencias[aparelho];\n\n    if (referencia === undefined) continue;\n\n    // Diferença em relação à referência\n    const diferenca = Number((consumo - referencia).toFixed(2));\n\n    // Classificação do consumo\n    let status;\n\n    if (consumo <= referencia * 0.8) {\n      status = \"Baixo\";\n    } else if (consumo <= referencia) {\n      status = \"Moderado\";\n    } else {\n      status = \"Alto\";\n    }\n\n    resultados.push({\n      json: {\n        aparelho: aparelho,\n        consumo_medio: consumo,\n        consumo_referencia: referencia,\n        status: status,\n        diferenca_media: diferenca,\n        percentual_referencia: Number(\n          ((consumo / referencia) * 100).toFixed(2)\n        )\n      }\n    });\n  }\n}\n\nreturn resultados;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -16
+      ],
+      "id": "8b6618fd-29f2-43ca-b3f9-0b8c070b6421",
+      "name": "analise da media"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1216,
+        -16
+      ],
+      "id": "086219ca-1186-490e-9dfc-02d4cc3d6c96",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hwuPhDQvsBa-Qne14GpYfPxAfn3KpRnjP1ebHk3pBvs",
+          "mode": "list",
+          "cachedResultName": "gestão de energia",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hwuPhDQvsBa-Qne14GpYfPxAfn3KpRnjP1ebHk3pBvs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hwuPhDQvsBa-Qne14GpYfPxAfn3KpRnjP1ebHk3pBvs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Aparelho": "={{ $json.aparelho }}",
+            "Consumo medio": "={{ $json.consumo_medio }}",
+            "Media geral": "={{ $json.consumo_referencia }}",
+            "Status": "={{ $json.status }}",
+            "Diferenca media": "={{ $json.diferenca_media }}",
+            "Data": "={{ $now.toFormat('dd/MM/yyyy') }}",
+            "Hora": "={{ $now.toFormat('HH:mm:ss') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data",
+              "displayName": "Data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hora",
+              "displayName": "Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Aparelho",
+              "displayName": "Aparelho",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Consumo medio",
+              "displayName": "Consumo medio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Media geral",
+              "displayName": "Media geral",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Diferenca media",
+              "displayName": "Diferenca media",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        64
+      ],
+      "id": "dbb5d528-9df0-49a8-b15c-a3d3f99790bf",
+      "name": "armazenamento de dados",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gTbd2BxDbakbi79V",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## tomada de decisão e integração com i.a",
+        "height": 352,
+        "width": 1232,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1568,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "c4a04d44-cf9a-450f-935e-34f660653320",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega todos os itens que chegam ao nó\nconst incomingItems = $input.all();\n\n// Normaliza para lidar tanto com itens separados quanto com um array único empacotado\nlet items = [];\nif (incomingItems.length === 1 && Array.isArray(incomingItems[0].json)) {\n  items = incomingItems[0].json;\n} else if (incomingItems.length === 1 && incomingItems[0].json.aparelhos) {\n  items = incomingItems[0].json.aparelhos;\n} else {\n  items = incomingItems.map(i => i.json);\n}\n\n// Filtra apenas aparelhos com consumo Moderado ou Alto (ignorando maiúsculas/minúsculas para segurança)\nconst aparelhosFiltrados = items\n  .filter(item => {\n    const status = (item[\"Status\"] || \"\").trim().toLowerCase();\n    return status === \"moderado\" || status === \"alto\";\n  })\n  .map(item => ({\n    aparelho: item[\"Aparelho\"],\n    consumo_medio: item[\"Consumo medio\"],\n    media_referencia: item[\"Media geral\"],\n    status: item[\"Status\"],\n    diferenca_media: item[\"Diferenca media\"],\n    data: item[\"Data\"],\n    hora: item[\"Hora\"]\n  }));\n\n// Retorna o objeto unificado pronto para a IA\nreturn [{\n  json: {\n    total_aparelhos_analisados: items.length,\n    total_aparelhos_filtrados: aparelhosFiltrados.length,\n    aparelhos: aparelhosFiltrados\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        -32
+      ],
+      "id": "6de13422-bbb5-494f-b4fc-01cccaa25215",
+      "name": "filtragem dos itens com consumo medio e elevado"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Você é um assistente especialista em eficiência energética residencial e análise de dados de consumo elétrico. Sua tarefa é analisar o JSON fornecido contendo os aparelhos com consumo moderado ou alto e decidir se a situação justifica o envio de um e-mail de alerta para o morador.\n\nCritérios para a decisão de envio:\n- **Enviar email**: Deve ser escolhido apenas se houver desvios significativos (ex: aparelhos com status \"Alto\" e alta diferença em relação à média de referência, ou múltiplos aparelhos acumulando um gasto expressivo que represente desperdício real).\n- **Não enviar email**: Deve ser escolhido se os desvios forem irrelevantes, marginais ou se o volume/impacto financeiro for muito baixo para justificar um incômodo ao usuário.\n\nFormato obrigatório da resposta:\n1. A sua primeira linha deve ser estritamente: \"Enviar email\" ou \"Não enviar email\" (sem pontuação extra ou aspas).\n2. Em seguida, insira exatamente três quebras de linha (\\n\\n\\n).\n3. Se a decisão for \"Enviar email\", escreva o corpo do e-mail de alerta formatado em HTML ou texto limpo, contendo os aparelhos problemáticos, os valores e sugestões práticas e personalizadas para evitar o desperdício (por exemplo: verificar se a porta da geladeira está vedada ou aberta, lâmpadas acesas desnecessariamente, etc.).\n4. Se a decisão for \"Não enviar email\", deixe o corpo do texto após as quebras de linha vazio ou apenas com uma breve justificativa interna (caso queira registrar).\n5. devem ter dois quebras linhas entre o assunto e o corpo do email assim \"\\n\\n\"\n6. instruções de formatação\n**Formatação obrigatória:**\n- Não utilize Markdown em nenhuma hipótese.\n- Não utilize asteriscos (`*` ou `**`) para destacar palavras.\n- Não utilize hashtags, crases ou outros símbolos de formatação.\n- Escreva os nomes dos aparelhos, títulos e sugestões em texto simples.\n- A resposta deve ser texto puro, sem formatação Markdown.\n\nExemplo de estrutura de saída esperada:\nEnviar email\n\\n\\n\\n\nAssunto: Alerta de Consumo Elevado de Energia\n\nOlá! Notamos que alguns aparelhos na sua residência estão consumindo acima da média esperada:\n- **Geladeira**: Consumo de 248.63 kWh (Referência: 150 kWh) - Status: Alto. Sugestão: Verifique se a borracha de vedação ou a porta estão totalmente fechadas.\n...\n\nsegue abaixo os dados a serem analisados\n{{ JSON.stringify($json.aparelhos, null, 2) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        -32
+      ],
+      "id": "015a5f97-6596-42d6-8649-5c88159a37de",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "c45b7e79-eb38-419e-9216-6af6980a3522",
+              "leftValue": "={{ $json.enviar_email }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2272,
+        -32
+      ],
+      "id": "ec3b9b66-3eea-401f-80ac-3ef7a02becfd",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2464,
+        112
+      ],
+      "id": "cb8d45d1-ecb4-4d8b-be24-0e098218390b",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "sendTo": "luigi.ferrara.2a@gmail.com",
+        "subject": "={{ $json.assunto }}",
+        "message": "={{ $json.corpo_email }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        -80
+      ],
+      "id": "f2e231c7-2471-44a4-a438-9fe3e42a438f",
+      "name": "Send a message",
+      "webhookId": "05267007-d941-4b98-b9ec-27f4e0fb9120",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "JJKSj4j9XBpx8Gnc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst dados = $input.first().json;\n\n// Extrai o texto gerado pelo AI Agent\nconst texto = dados.output?.[0]?.content?.find(\n  item => item.type === \"output_text\"\n)?.text || \"\";\n\n// Separa as partes usando as quebras de linha\nconst partes = texto.trim().split(/\\n+/);\n\n// Primeira parte: decisão\nconst decisao = partes[0]?.trim() || \"\";\n\n// Localiza o assunto\nconst indiceAssunto = partes.findIndex(\n  linha => /^Assunto:/i.test(linha.trim())\n);\n\n// Extrai o assunto\nconst assunto = indiceAssunto >= 0\n  ? partes[indiceAssunto].replace(/^Assunto:\\s*/i, \"\").trim()\n  : \"\";\n\n// Extrai o corpo após o assunto\nconst corpoEmail = indiceAssunto >= 0\n  ? partes.slice(indiceAssunto + 1).join(\"\\n\").trim()\n  : \"\";\n\nreturn [\n  {\n    json: {\n      decisao,\n      enviar_email: /^Enviar email$/i.test(decisao),\n      assunto,\n      corpo_email: corpoEmail\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2096,
+        -32
+      ],
+      "id": "2c3b17df-004f-47c6-8fa3-c1e6ad57a6fa",
+      "name": "analise da resposta da i.a"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "representação do tempo , uma hora com 60 minutos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "pega a media de energia gasta em cada aparelho ao longo de uma hora",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "simulação de geração de dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "representação do tempo , uma hora com 60 minutos": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "simulação de geração de dados": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pega a media de energia gasta em cada aparelho ao longo de uma hora": {
+      "main": [
+        [
+          {
+            "node": "analise da media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "analise da media": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "filtragem dos itens com consumo medio e elevado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "armazenamento de dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "armazenamento de dados": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filtragem dos itens com consumo medio e elevado": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "analise da resposta da i.a",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "analise da resposta da i.a": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "48728d4a-9fc1-49f6-a971-d8bbd2468273",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6fee90ebda41eeb0cff3c0bedc683e572ca5b8c6e9bed4f862d2a3ba0e2b13b2"
+  },
+  "nodeGroups": [],
+  "id": "gtCGNkgZvuLpAnn6",
+  "tags": []
+}
