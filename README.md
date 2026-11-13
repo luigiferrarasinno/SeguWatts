@@ -55,7 +55,7 @@ O pipeline de automação foi construído de forma modular no **n8n**, dividido 
 ### Passo a Passo para Importação
 1. **Clone este repositório:**
    ```bash
-   git clone [INSERIR_LINK_DO_REPOSITORIO_AQUI]
+   git clone https://github.com/luigiferrarasinno/SeguWatts.git
    ```
 2. **Importe o Workflow no n8n:**
    * Acesse o painel do seu n8n e crie um novo workflow.
