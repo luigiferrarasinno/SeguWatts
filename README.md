@@ -73,6 +73,6 @@ O pipeline de automação foi construído de forma modular no **n8n**, dividido 
 
 ## 🔗 Links Importantes
 
-* **🎥 Vídeo Demonstrativo (YouTube):** [Inserir Link do Vídeo Demonstrativo]
+* **🎥 Vídeo Demonstrativo (YouTube):** https://youtu.be/_r6gA2Y_60k?si=lUr4K27SqhDz8v0A
 * **📊 Planilha Modelo de Auditoria (Google Sheets):** https://docs.google.com/spreadsheets/d/1hwuPhDQvsBa-Qne14GpYfPxAfn3KpRnjP1ebHk3pBvs/edit?usp=drive_link
 * **📄 Relatório Técnico Completo:** Disponível na pasta `/docs` deste repositório.
